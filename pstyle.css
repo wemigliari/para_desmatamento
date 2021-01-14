@@ -1,0 +1,255 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  width:100%;
+  background-color:#2e6b23;
+  margin-top: 0;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.wrapper{
+  width: 100%;
+  margin: 0 auto;
+}
+
+.box {
+  width: 530px;
+  height: 600px;
+  float: left;
+  border-color: #3b3b00;
+  margin: 50px 50px 50px 50px;
+  background-color: #b3b300;
+}
+
+.av-info {
+  width: 100%;
+}
+
+.av-info h2 {
+  padding: 0 20px 10px 30px;
+  font-family: helvetica;
+  font-size: 50px;
+  color: #343400;
+  line-height: 80px;
+}
+
+.av-info p {
+  padding: 20px 20px 20px 20px;
+  font-family: helvetica;
+  font-size: 15px;
+  color: #343400;
+  line-height: 20px;
+}
+
+.videowrapper {
+  position: relative;
+  padding-bottom: 100%;
+  padding-top: 10px;
+  height: 0;
+}
+
+.videowrapper iframe {
+  position: absolute;
+  left: 20px;
+  top: 20px;
+  right: 20px;
+  bottom: 30px;
+  width: 100%;
+  height: 30%;
+}
+
+.img-banner {
+  height: 600px;
+  width: 100%;
+  background-image: url(images/oriximina_osm.png);
+  background-size: 100%;
+  background-repeat: no-repeat;
+  margin: 0 auto;
+  animation: slide 20s infinite;
+}
+
+@media only screen and (min: 568px){
+  .img-banner {
+    display: block;
+    width: 100%;
+    padding-bottom: 0;
+  }
+}
+
+@keyframes slide {
+  100% {
+    background-image: url(images/alenquer_osm.png);
+  }
+  100% {
+    background-image: url(images/santarem_osm.png);
+  }
+  100% {
+    background-image: url(images/obidos_osm.png);
+  }
+}
+
+.img-la {
+  padding: 50px 30px 5px 10px;
+  height: 780px;
+  background-image: url(images/para_linhas_areas.png);
+  background-size: 100%;
+  background-repeat: no-repeat;
+}
+
+.img-al {
+  padding: 50px 30px 5px 10px;
+  height: 780px;
+  background-image: url(images/amazonia_legal.png);
+  background-size: 100%;
+  background-repeat: no-repeat;
+}
+
+.img-av {
+  padding: 50px 30px 50px 10px;
+  height: 780px;
+  background-image: url(images/areas_vulnerabilizadas.png);
+  background-size: 100%;
+  background-repeat: no-repeat;
+}
+
+nav {
+  width: 100%;
+  height: 45px;
+  background-color: #2e6b23;
+}
+
+ul li {
+  list-style: none;
+  display: inline-block;
+  float: left;
+  line-height: 45px;
+}
+
+ul li a {
+  display: block;
+  text-decoration: none;
+  font-size: 13px;
+  font-family: helvetica;
+  color: #dbead5;
+  padding: 0 20px;
+}
+
+ul li a:hover {
+  color: #b7d5ac;
+}
+
+.active {
+ background-color: #2e6b23;
+}
+
+@media only screen and (min: 568px) {
+  .nav a {
+    float: none;
+    display: block;
+    width: 100%;
+    text-align: left;
+  }
+}
+
+.av-info h2 {
+  padding: 20px 50px 10px 60px;
+}
+
+.av-info p {
+  padding: 10px 50px 10px 60px;
+}
+
+.topnav {
+    background-color: #333;
+    overflow: hidden;
+}
+
+.topnav a {
+  float: left;
+  color: #f2f2f2;
+  text-align: center;
+  padding: 14px 16px;
+  text-decoration: none;
+  font-size: 17px;
+}
+
+.topnav a:hover {
+  background-color: #ddd;
+  color: black;
+}
+
+.topnav a.active {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.topnav-right {
+  float: right;
+}
+
+#header {
+  height: 50px;
+}
+
+#col1 {
+  background-color: #2e6b23;
+    width: 20%;
+}
+
+#col2 {
+  background-color: #b3b300;
+  width: 60%;
+}
+
+#col3 {
+  background-color: #2e6b23;
+    width: 20%;
+}
+
+.column {
+  display: flex;
+  column-gap: 10px;
+  height: 840px;
+  float: left;
+  margin: 40px 0 40px 0;
+}
+
+@media only screen and (min: 568px) {
+  .column a {
+    float: left;
+    display: block;
+    width: 100%;
+    text-align: left;
+  }
+}
+
+#footer {
+  background: #2e6b23;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  font-size: 1.2em;
+}
+#footer ul {
+  display: flex;
+  justify-content: center;
+  align-items:center;
+  height:40px;
+  margin: 0;
+  padding: 0;
+}
+#footer li {
+  list-style: none;
+  display: inline-block;
+  float: left;
+  line-height: 5px;
+}
+
+#footer li a:hover {
+  color: #b7d5ac;
+}
+

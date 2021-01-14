@@ -1,0 +1,19 @@
+name: Narrativas
+navbar:
+  title: Narrativas
+  left:
+  - text: "Projeto"
+    href: index.html
+  - text: "Georreferenciamento"
+    href: georre.html
+  - text: "Dinâmica Econômica"
+    href: dimen_econ.html
+  - text: "Governança & RIs"
+    href: governanca.html
+output:
+  html_document:
+    lib_dir: site_libs
+    self_contained: no
+output_dir: _site
+  
+  

@@ -1,0 +1,204 @@
+---
+title: ""
+output: html_document
+---
+
+```{r setup, echo = FALSE, include=FALSE, warning = FALSE}
+
+library(knitr)
+library(writexl)
+library(rgdal)
+library(sf) ## Read shapefiles
+library(dplyr)
+library(leaflet)
+library(cowplot)
+library(ggplot2)
+library(plotly)
+library(readxl)
+library(htmlwidgets)
+library(curl)
+
+```
+\
+\
+
+#### Economia Política
+
+\
+
+Os mapas abaixo assinalam duas dimensões importantes para se compreender o desmatamento no Estado do Pará. A primeira delas resulta do potencial produtivo que cada município pode oferecer à região e, por conseguinte, à economia nacional A outra está intimamente atrelada às zonas econômicas ecológicas da Amazônia Legal, isto é, espaços econômicos que estão em processo de consolidação-expansão, com incidência de maiores conflitos territoriais, e aquelas áreas com diferentes níveis de atividade econômica já consolidada. Posicione o cursor sobre os municípios e selecione os botões que se encontram nas folhas cartográficas para visualizar de que forma essas dinânicas se dão.
+
+```{r, echo=FALSE, warning=FALSE, comment = FALSE, message = FALSE, include = FALSE}
+
+brasil1 <- read_sf("/Users/wemigliari/Documents/R/data/BRA_adm2.shp") ### Shape in form of sf
+estados <- read_sf("/Users/wemigliari/Documents/R/data/BRA_adm1.shp")
+amazonas <- read_sf("/Users/wemigliari/Documents/R/data/para/Rio Amazonas.shp")
+amazonia_legal <- read_sf("/Users/wemigliari/Documents/R/data/para/amazonia_legal.shp")
+poten_econ_eixo_leste <- read_sf("/Users/wemigliari/Documents/R/data/para/poten_econo_eixo_leste.shp")
+poten_produt_eixo_oeste <- read_sf("/Users/wemigliari/Documents/R/data/para/poten_produt_eixo_oeste.shp")
+zoce <- read_sf("/Users/wemigliari/Documents/R/data/para/zona_oeste_conso_exp.shp")
+zlc <- read_sf("/Users/wemigliari/Documents/R/data/para/zona_leste_conso.shp")
+
+hidrovias <- read_sf("/Users/wemigliari/Documents/R/data/para/hidrovias_brasil.shp")
+hidrovias_b <- st_zm(hidrovias)
+
+portos <- read_sf("/Users/wemigliari/Documents/R/data/para/portos_brasil.shp")
+portos_b <- st_zm(portos)
+
+cabotagem <- read_sf("/Users/wemigliari/Documents/R/data/para/cabotagem_brasil.shp")
+cabotagem_b <- st_zm(cabotagem)
+
+dutovias <- read_sf("/Users/wemigliari/Documents/R/data/para/dutovias_brasil.shp")
+dutovias_b <- st_zm(dutovias) ### From polygon Z to ZM dimensions
+
+para <- brasil1%>%filter(NAME_1=="Pará")
+obidos <- brasil1%>%filter(NAME_2=="Óbidos")
+santarem <- brasil1%>%filter(NAME_2=="Santarém")
+alenquer <- brasil1%>%filter(NAME_2=="Alenquer")
+itaituba <- brasil1%>%filter(NAME_2=="Itaituba")
+belterra <- brasil1%>%filter(NAME_2=="Belterra")
+oriximina <- brasil1%>%filter(NAME_2=="Oriximiná")
+aveiro <- brasil1%>%filter(NAME_2=="Aveiro")
+
+
+
+serie_desmat <- read_excel("/Users/wemigliari/Documents/R/data/para/desmatamento_para.xlsx",
+                           sheet = "municipios")
+serie_desmat <- data.frame(serie_desmat, stringsAsFactors = FALSE)
+
+i <- c(2:12)   
+
+test <- serie_desmat[ , i] <- apply(serie_desmat[ , i], 2,            # Specify own function within apply
+                    function(x) as.numeric(as.character(x)))
+class(test)
+
+test1 <- as.data.frame(test)
+
+test_desmat <- cbind(serie_desmat$Localidade, test1)
+
+asc_desmat <- test_desmat[with(test_desmat, order(X2009)), ]
+
+baixo_desmat <- asc_desmat[1:10,]
+alto_desmat <- asc_desmat[134:143,]
+
+dez_munic <- test_desmat[c(6, 14, 58, 81, 83, 113),c(1:12)]
+asc_munic <- dez_munic[with(dez_munic, order(X2009)), ]
+
+
+```
+
+## {.tabset}
+
+
+### Potencial Produtivo
+
+
+```{r, echo = FALSE, warning=FALSE, comment=FALSE, message=FALSE, fig.width=7}
+
+
+peel <- paste(sep = " ",
+                 "Município:",
+                 poten_econ_eixo_leste$NOME_MUNIC,
+                 "|",
+                 "Dimensão Econômica:",
+                 poten_econ_eixo_leste$DIM__ECONO)
+
+
+leaflet() %>% 
+  addTiles() %>% 
+  addPolygons(data=estados$geometry, weight = 1, fillColor = 'darkgray', fillOpacity = 0.1, color = 'gray', smoothFactor = 0.1) %>%
+  addPolygons(data=poten_produt_eixo_oeste$geometry, weight = 1, fillColor = 'purple', fillOpacity = 0.5, smoothFactor = 0.1, 
+              color = 'purple')%>%
+  addPolygons(data=poten_econ_eixo_leste$geometry, weight = 1, fillColor = 'orange', fillOpacity = 0.5, smoothFactor = 0.2, 
+              color = 'orange', label = peel)%>%
+  addProviderTiles(providers$Esri.WorldGrayCanvas)%>% 
+  setView(lat= -3.0000, lng = -52.00000, zoom = 5)
+
+
+```
+Fonte: [SIAGEO/Embrapa](https://www.amazonia.cnptia.embrapa.br/).
+
+\
+
+### Expansão e Consolidação das Zonas Econômicas
+
+
+```{r, echo = FALSE, warning=FALSE, comment=FALSE, message=FALSE, fig.width=7}
+
+ceze1 <- paste(sep = " ",
+              "Município:",
+              poten_produt_eixo_oeste$MUNICIPI1,
+              "|",
+              "Status:",
+              zoce$CATEGORIA)
+
+
+ceze2 <- paste(sep = " ",
+              "Município:",
+              zlc$MUNICIPIO,
+              "|",
+              "Nível de Consolidação:",
+              zlc$NOME)
+
+
+leaflet() %>% 
+  addTiles() %>% 
+  addPolygons(data=estados$geometry, weight = 1, fillColor = 'gray', fillOpacity = 0.1, color = 'gray', smoothFactor = 0.1) %>%
+  addPolygons(data=para$geometry, weight = 1, fillColor = 'green', fillOpacity = 0.1, color = 'green', smoothFactor = 0.1) %>%
+  addPolygons(data=zoce$geometry, weight = 1, fillColor = 'red', fillOpacity = 0.1, smoothFactor = 0.1, 
+              color = 'red', label = ceze1, group = "Consolidação e Expansão")%>%
+  addPolygons(data=zlc$geometry, weight = 1, fillColor = 'darkgreen', fillOpacity = 0.2, smoothFactor = 0.2, 
+              color = 'darkgreen', label = ceze2, group = "Consolidação I, II e III")%>%
+  addPolygons(data=obidos$geometry, weight = 1, fillColor = 'gold', opacity = 0.3, color = 'gray', label = "Óbidos")%>%
+  addPolygons(data=santarem$geometry, weight = 1, fillColor = 'gold', opacity = 0.3, color = 'gray', label = "Santarém")%>%
+  addPolygons(data=alenquer$geometry, weight = 1, fillColor = 'gold', opacity = 0.3, color = 'gray', label = "Alenquer")%>%
+  addPolygons(data=itaituba$geometry, weight = 1, fillColor = 'gold', opacity = 0.3, color = 'gray', label = "Itaituba")%>%
+  addPolygons(data=belterra$geometry, weight = 1, fillColor = 'gold', opacity = 0.3, color = 'gray', label = "Belterra")%>%
+  addPolygons(data=oriximina$geometry, weight = 1, fillColor = 'gold', opacity = 0.3, color = 'gray', label = "Oriximiná")%>%
+  addPolygons(data=aveiro$geometry, weight = 1, fillColor = 'gold', opacity = 0.3, color = 'gray', label = "Aveiro")%>%
+  addPolygons(data=amazonas, weight = 1, fillColor = 'blue', fillOpacity = 0.5, color = 'blue', label = "Rio Amazonas")%>%
+  addProviderTiles(providers$Esri.WorldGrayCanvas)%>% 
+  setView(lat= -3.0000, lng = -52.00000, zoom = 5)%>%
+  addLayersControl(
+    baseGroups = c("Consolidação e Expansão", "Consolidação I, II e III"),
+    options = layersControlOptions(collapsed = FALSE)
+  )
+
+
+```
+Fonte: [SIAGEO/Embrapa](https://www.amazonia.cnptia.embrapa.br/).
+
+\
+<<<<<<< HEAD
+
+
+### Cadeia de Produção & Conflitos
+
+\
+
+Fig. 1. Cadeia Produtiva Embrapa.
+
+![](/Users/wemigliari/Documents/R/R_Scripts/Rmarkdown/para_desmatamento/docs/images/cpembrapa.png)
+
+Fonte: [Embrapa](https://www.embrapa.br/qualidade-da-carne/carne-bovina)
+
+\
+\
+
+Fig. 2. Cadeia Produtiva Sem Conflitos Territoriais
+
+![](/Users/wemigliari/Documents/R/R_Scripts/Rmarkdown/para_desmatamento/docs/images/cpsc.png)
+Fonte: Elaboração própria.
+
+\
+\
+
+Fig. 3. Cadeia Produtiva Com Conflitos Territoriais
+
+![](/Users/wemigliari/Documents/R/R_Scripts/Rmarkdown/para_desmatamento/docs/images/cpcc.png)
+Fonte: Elaboração própria.
+
+\
+=======
+>>>>>>> 05ff23d714de2daa7f6f607b069cdc427c40b06c
+\

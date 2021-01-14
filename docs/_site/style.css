@@ -1,0 +1,66 @@
+nav {
+  width: 100%;
+  height: 45px;
+  background-color: #2e6b23;
+}
+
+ul li {
+  list-style: none;
+  display: inline-block;
+  float: left;
+  line-height: 45px;
+}
+
+ul li a {
+  display: block;
+  text-decoration: none;
+  font-size: 13px;
+  font-family: helvetica;
+  color: #dbead5;
+  padding: 0 20px;
+}
+
+ul li a:hover {
+  color: #b7d5ac;
+}
+
+.active {
+ background-color: #2e6b23;
+}
+
+@media only screen and (min: 568px) {
+  .nav a {
+    float: none;
+    display: block;
+    width: 100%;
+    text-align: left;
+  }
+}
+
+.topnav {
+    background-color: #333;
+    overflow: hidden;
+}
+
+.topnav a {
+  float: left;
+  color: #f2f2f2;
+  text-align: center;
+  padding: 14px 16px;
+  text-decoration: none;
+  font-size: 17px;
+}
+
+.topnav a:hover {
+  background-color: #ddd;
+  color: black;
+}
+
+.topnav a.active {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.topnav-right {
+  float: right;
+}

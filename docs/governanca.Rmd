@@ -1,0 +1,300 @@
+---
+title: ""
+author: ""
+output:
+  rmarkdown::html_document:
+    theme: lumen
+---
+
+
+```{r setup, echo = FALSE, include=FALSE, warning = FALSE}
+
+library(knitr)
+library(writexl)
+library(rgdal)
+library(sf) ## Read shapefiles
+library(dplyr)
+library(leaflet)
+library(cowplot)
+library(ggplot2)
+library(plotly)
+library(readxl)
+library(htmlwidgets)
+
+```
+\
+\
+
+#### Governança & RIs
+
+\
+
+Os conflitos territoriais que emergem das entrevistas dos povos amazônicos afetados pela expansão da fronteira agrícola, extrativista e mineira envolvem um modelo de desenvolvimento do território nacional ainda de perfil predatório. Entretanto, as economias locais e tradicionais do solo amazônico possuem respaldo em vários acordos internacionais dos quais o Brasil é parte. Entre eles, estão o Acordo de Paris sobre emissão de gases de efeito estufa, o Acordo Mercosul-União Europeia e as convenções internacionais sobre o clima bem como urbanização que impõem à inteligência política nacional o desafio de criar formas democráticas de governo e governança em defesa de direitos fundamentais, promoção do desenvolvimento socioeconômico e alternativas institucionais incentivadas por economias sustentáveis. Em síntese, o Estado brasileiro precisa apresentar urgentemente uma proposta de desenvolvimento que, no plano interno e para as próximas décadas, combine a redução do desmatamento e dos conflitos territoriais com um desenvolvimento moderno da Amazônia Legal.\
+
+Os dados sobre o desmatamento no Estado do Pará e, especificamente, nos municípios estudados confirmam uma tendência de destruição do bioma por corte raso para a inserção de monoculturas como a da soja e a do gado no solo amazônico. Contudo, reverter esse processo de obliteração crescente passa por dois níveis teóricos. Um deles é o doméstico e requer uma reformatação do uso do solo no país indicando de que forma as reservas naturais serão utilizadas, por quanto tempo e de que modo deverão financiar o desenvolvimento da Amazônia. O outro é o internacional, pois, por um lado, não parece plausível deixar de produzir commodities no curto prazo nem imaginar, por outro lado, o Brasil insistir futuramente nos níveis de desindustrialização atuais. As narrativas dos povos tradicionais da Amazônia, portanto, oferecem algumas pistas, pois, no cerne das tensões territoriais entre comunidades e agroexportadores, impera um modelo de econômia política que ainda deve à região amazônica uma alternativa econômica tecnológica, inclusiva e sustentável.    
+
+\
+
+```{r, echo=FALSE, warning=FALSE, comment = FALSE, message = FALSE, include = FALSE}
+
+brasil1 <- read_sf("/Users/wemigliari/Documents/R/data/BRA_adm2.shp") ### Shape in form of sf
+estados <- read_sf("/Users/wemigliari/Documents/R/data/BRA_adm1.shp")
+amazonas <- read_sf("/Users/wemigliari/Documents/R/data/para/Rio Amazonas.shp")
+amazonia_legal <- read_sf("/Users/wemigliari/Documents/R/data/para/amazonia_legal.shp")
+poten_econ_eixo_leste <- read_sf("/Users/wemigliari/Documents/R/data/para/poten_econo_eixo_leste.shp")
+poten_produt_eixo_oeste <- read_sf("/Users/wemigliari/Documents/R/data/para/poten_produt_eixo_oeste.shp")
+zoce <- read_sf("/Users/wemigliari/Documents/R/data/para/zona_oeste_conso_exp.shp")
+zlc <- read_sf("/Users/wemigliari/Documents/R/data/para/zona_leste_conso.shp")
+
+hidrovias <- read_sf("/Users/wemigliari/Documents/R/data/para/hidrovias_brasil.shp")
+hidrovias_b <- st_zm(hidrovias)
+
+portos <- read_sf("/Users/wemigliari/Documents/R/data/para/portos_brasil.shp")
+portos_b <- st_zm(portos)
+
+cabotagem <- read_sf("/Users/wemigliari/Documents/R/data/para/cabotagem_brasil.shp")
+cabotagem_b <- st_zm(cabotagem)
+
+dutovias <- read_sf("/Users/wemigliari/Documents/R/data/para/dutovias_brasil.shp")
+dutovias_b <- st_zm(dutovias) ### From polygon Z to ZM dimensions
+
+para <- brasil1%>%filter(NAME_1=="Pará")
+obidos <- brasil1%>%filter(NAME_2=="Óbidos")
+santarem <- brasil1%>%filter(NAME_2=="Santarém")
+alenquer <- brasil1%>%filter(NAME_2=="Alenquer")
+itaituba <- brasil1%>%filter(NAME_2=="Itaituba")
+belterra <- brasil1%>%filter(NAME_2=="Belterra")
+oriximina <- brasil1%>%filter(NAME_2=="Oriximiná")
+aveiro <- brasil1%>%filter(NAME_2=="Aveiro")
+
+
+
+serie_desmat <- read_excel("/Users/wemigliari/Documents/R/data/para/desmatamento_para.xlsx",
+                           sheet = "municipios")
+serie_desmat <- data.frame(serie_desmat, stringsAsFactors = FALSE)
+
+i <- c(2:12)   
+
+test <- serie_desmat[ , i] <- apply(serie_desmat[ , i], 2,            # Specify own function within apply
+                    function(x) as.numeric(as.character(x)))
+class(test)
+
+test1 <- as.data.frame(test)
+
+test_desmat <- cbind(serie_desmat$Localidade, test1)
+
+asc_desmat <- test_desmat[with(test_desmat, order(X2009)), ]
+
+baixo_desmat <- asc_desmat[1:10,]
+alto_desmat <- asc_desmat[134:143,]
+
+dez_munic <- test_desmat[c(6, 14, 58, 81, 83, 113),c(1:12)]
+asc_munic <- dez_munic[with(dez_munic, order(X2009)), ]
+
+```
+
+\
+
+## {.tabset}
+
+### Desmatamento Pará
+\
+```{r, echo = FALSE, warning=FALSE, comment=FALSE, message=FALSE, fig.width=8}
+
+
+  plot_ly(asc_desmat, x = ~X2009, y = ~serie_desmat$Localidade, 
+        name = "2009", 
+        type = "scatter", 
+        mode = 'markers', 
+        color = I("steelblue"), 
+        opacity = 0.9, 
+        marker = list(size = ~X2009/800, color = "#e2e2e2"))%>%
+  add_trace(x = ~X2010, y = ~serie_desmat$Localidade, name = "2010", mode = 'markers',
+            color = I("#bbbbbb"), opacity = 0.8,  marker = list(color = "#bbbbbb"))%>%
+  add_trace(x = ~X2011, y = ~serie_desmat$Localidade, name = "2011", mode = 'markers', 
+            color = I("#9d9d9d"), opacity = 0.7, marker = list(color = "#9d9d9d"))%>%
+  add_trace(x = ~X2012, y = ~serie_desmat$Localidade, name = "2012", mode = 'markers', 
+            color = I("#767676"), opacity = 0.6, marker = list(color = "#767676"))%>%
+  add_trace(x = ~X2013, y = ~serie_desmat$Localidade, name = "2013", mode = 'markers', 
+            color = I("#3b3b3b"), marker = list(color = "#3b3b3b"))%>%
+  add_trace(x = ~X2014, y = ~serie_desmat$Localidade, name = "2014", mode = 'markers', 
+            color = I("#d8ffd8"), marker = list(color = "#d8ffd8"))%>%
+  add_trace(x = ~X2015, y = ~serie_desmat$Localidade, name = "2015", mode = 'markers', 
+            color = I("#62ff62"), marker = list(color = "#62ff62"))%>%
+  add_trace(x = ~X2016, y = ~serie_desmat$Localidade, name = "2016", mode = 'markers', 
+            color = I("#009d00"), marker = list(color = "#009d00"))%>%
+  add_trace(x = ~X2017, y = ~serie_desmat$Localidade, name = "2017", mode = 'markers', 
+            color = I("#006200"), marker = list(color = "#006200"))%>%
+  add_trace(x = ~X2018, y = ~serie_desmat$Localidade, name = "2018", mode = 'markers', 
+            color = I("#004e00"), marker = list(color = "#004e00"))%>%
+  add_trace(x = ~X2019, y = ~serie_desmat$Localidade, name = "2019", mode = 'markers', 
+            color = I("#001400"), marker = list(color = "#001400"))%>%
+  layout(title = "",
+         titlefont = list(size = 10),
+         xaxis = list(title = "Distribuição dos Quilômetros de Desmatamento (km2).", tickfont = list(size = 10)),
+         yaxis = list (title = "", tickfont = list(size = 10)))
+
+
+```
+Fonte: [SIAGEO/Embrapa](https://www.amazonia.cnptia.embrapa.br/).
+
+\
+
+### Maior Desmatamento Pará
+\
+```{r, echo = FALSE, warning=FALSE, comment=FALSE, message=FALSE, fig.width=8}
+
+plot_ly(alto_desmat, x = alto_desmat$X2009, y = alto_desmat$`serie_desmat$Localidade`, 
+        name = "2009", 
+        color = I("#bbbbbb"), 
+        opacity = 0.9)%>%
+  add_bars() %>%
+  layout(barmode = "stack")%>%
+  add_bars(x = ~X2010, name = "2010",
+           color = I("#9d9d9d"), opacity = 0.8)%>%
+  add_bars(x = ~X2011, name = "2011",
+           color = I("#767676"), opacity = 0.7)%>%
+  add_bars(x = ~X2012, name = "2012", 
+           color = I("#3b3b3b"), opacity = 0.6)%>%
+  add_bars(x = ~X2013, name = "2013",
+           color = I("#7f0000"))%>%
+  add_bars(x = ~X2014, name = "2014",
+           color = I("#990000"))%>%
+  add_bars(x = ~X2015, name = "2015",
+           color = I("#b20000"))%>%
+  add_bars(x = ~X2016, name = "2016",
+           color = I("#cc0000"))%>%
+  add_bars(x = ~X2017, name = "2017", 
+           color = I("#ff0000"))%>%
+  add_bars(x = ~X2018, name = "2018",
+           color = I("#ff7f7f"))%>%
+  add_bars(x = ~X2019, name = "2019",
+           color = I("#ff9999"))%>%
+  layout(title = "",
+         titlefont = list(size = 10),
+         xaxis = list(title = "Os 10 Municípios com Maior Desmatamento (km2).", 
+                      title = list(font = 8)),
+         yaxis = list (title = "", title = list(font = 8)))
+
+```
+Fonte: [PRODES/INPE](http://www.dpi.inpe.br/prodesdigital/prodesmunicipal.php).
+
+\
+
+### Menor Desmatamento Pará
+\
+```{r, echo = FALSE, warning=FALSE, comment=FALSE, message=FALSE, fig.width=8}
+
+plot_ly(baixo_desmat, x = baixo_desmat$X2009, y = baixo_desmat$`serie_desmat$Localidade`, 
+        name = "2009", 
+        color = I("#3c3c00"), 
+        opacity = 0.9)%>%
+  add_bars() %>%
+  layout(barmode = "stack")%>%
+  add_bars(x = ~X2010, name = "2010",
+            color = I("#646400"), opacity = 0.8)%>%
+  add_bars(x = ~X2011, name = "2011",
+            color = I("#777700"), opacity = 0.7)%>%
+  add_bars(x = ~X2012, name = "2012", 
+            color = I("#8b8b00"), opacity = 0.6)%>%
+  add_bars(x = ~X2013, name = "2013",
+            color = I("#b2b200"))%>%
+  add_bars(x = ~X2014, name = "2014",
+            color = I("#ffffd8"))%>%
+  add_bars(x = ~X2015, name = "2015",
+            color = I("#ebffeb"))%>%
+  add_bars(x = ~X2016, name = "2016",
+            color = I("#89ff89"))%>%
+  add_bars(x = ~X2017, name = "2017", 
+            color = I("#00eb00"))%>%
+  add_bars(x = ~X2018, name = "2018",
+            color = I("#00b100"))%>%
+  add_bars(x = ~X2019, name = "2019",
+            color = I("#008900"))%>%
+  layout(title = "",
+         title = list(font = 6),
+         xaxis = list(title = "Os 10 Municípios com Menor Desmatamento (km2).", tickfont = list(size = 6)),
+         yaxis = list (title = "", tickfont = list(size = 8)))
+
+```
+Fonte: [PRODES/INPE](http://www.dpi.inpe.br/prodesdigital/prodesmunicipal.php).
+
+\
+
+### Municípios Estudados
+\
+```{r, echo = FALSE, warning=FALSE, comment=FALSE, message=FALSE, fig.width=8}
+
+plot_ly(asc_munic, x = asc_munic$`serie_desmat$Localidade`, y = asc_munic$X2009, 
+        name = "2009", 
+        type = "bar",
+        color = I("#e2e2e2"), 
+        opacity = 0.9)%>%
+  add_trace(y = ~X2010, name = "2010", type = 'bar',
+            color = I("#bbbbbb"), opacity = 0.8)%>%
+  add_trace(y = ~X2011, name = "2011", type = 'bar', 
+            color = I("#9d9d9d"), opacity = 0.7)%>%
+  add_trace(y = ~X2012, name = "2012", type = 'bar', 
+            color = I("#767676"), opacity = 0.6)%>%
+  add_trace(y = ~X2013, name = "2013", type = 'bar', 
+            color = I("#3b3b3b"))%>%
+  add_trace(y = ~X2014, name = "2014", type = 'bar',
+            color = I("#d8ffd8"))%>%
+  add_trace(y = ~X2015, name = "2015", type = 'bar',
+            color = I("#62ff62"))%>%
+  add_trace(y = ~X2016, name = "2016", type = 'bar',
+            color = I("#009d00"))%>%
+  add_trace(y = ~X2017, name = "2017", type = 'bar',
+            color = I("#006200"))%>%
+  add_trace(y = ~X2018, name = "2018", type = 'bar',
+            color = I("#004e00"))%>%
+  add_trace(y = ~X2019, name = "2019", type = 'bar',
+            color = I("#001400"))%>%
+  layout(title = '',
+         barmode = 'stack',
+         titlefont = list(size = 10),
+         xaxis = list(title = 'Desmatamento (km2) nos Municípios Estudados.', tickfont = list(size = 10)),
+         yaxis = list (title = '', tickfont = list(size = 10)))
+```
+Fonte: [PRODES/INPE](http://www.dpi.inpe.br/prodesdigital/prodesmunicipal.php).
+\
+
+```{r, echo = FALSE, warning=FALSE, comment=FALSE, message=FALSE, fig.width=8}
+
+
+plot_ly(asc_munic, type = "box", 
+        quartilemethod="linear",
+        boxpoints = "all", jitter = 0.3,
+        pointpos = -1.8)%>%
+  add_trace(y = asc_munic$X2009, name = "2009", type = "box",
+            color = I("#3b3b00"))%>%
+  add_trace(y = asc_munic$X2010, name = "2010", type = "box", 
+            color = I("#646400"))%>%
+  add_trace(y = asc_munic$X2011, name = "2011", type = "box",
+            color = I("#777700"))%>%
+  add_trace(y = asc_munic$X2012, name = "2012", type = "box",
+            color = I("#8b8b00"))%>%
+  add_trace(y = asc_munic$X2013, name = "2013", type = "box",
+            color = I("#b2b200"))%>%
+  add_trace(y = asc_munic$X2014, name = "2014", type = "box",
+            color = I("#d8d800"))%>%
+  add_trace(y = asc_munic$X2015, name = "2015", type = "box",
+            color = I("#00eb00"))%>%
+  add_trace(y = asc_munic$X2016, name = "2016", type = "box",
+            color = I("#00d800"))%>%
+  add_trace(y = asc_munic$X2017, name = "2017", type = "box",
+            color = I("#45ba45"))%>%
+  add_trace(y = asc_munic$X2018, name = "2018", type = "box",
+            color = I("#008900"))%>%
+  add_trace(y = asc_munic$X2019, name = "2019", type = "box",
+            color = I("#002700"))%>%
+  layout(title = "",
+         xaxis = list(title = "Média Desmatamento. Municípios Estudados, 2009-2019 (km2)"),
+         yaxis = list (title = ""))
+
+``` 
+Fonte: [PRODES/INPE](http://www.dpi.inpe.br/prodesdigital/prodesmunicipal.php).
+
+\
+\
+

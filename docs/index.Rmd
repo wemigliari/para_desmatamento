@@ -1,0 +1,111 @@
+---
+title: ""
+output: html_document
+---
+
+
+```{r setup, echo = FALSE, include=FALSE, warning = FALSE}
+
+library(knitr)
+library(writexl)
+library(rgdal)
+library(sf) ## Read shapefiles
+library(dplyr)
+library(leaflet)
+library(cowplot)
+library(ggplot2)
+library(plotly)
+library(readxl)
+library(htmlwidgets)
+
+```
+
+```{r image, fig.show = "asis", out.width = c("25%", "50%"), fig.align = "default", echo = FALSE, warning = FALSE}
+
+ggdraw() + draw_image("/Users/wemigliari/Documents/R/R_Scripts/Rmarkdown/para/images/logo_ufopa.png")
+ggdraw() + draw_image("/Users/wemigliari/Documents/R/R_Scripts/Rmarkdown/para/images/logo_programa_pos.png")
+
+
+```
+
+
+```{r, echo=FALSE, warning=FALSE, comment = FALSE, message = FALSE, include = FALSE}
+
+brasil1 <- read_sf("/Users/wemigliari/Documents/R/data/BRA_adm2.shp") ### Shape in form of sf
+estados <- read_sf("/Users/wemigliari/Documents/R/data/BRA_adm1.shp")
+amazonas <- read_sf("/Users/wemigliari/Documents/R/data/para/Rio Amazonas.shp")
+amazonia_legal <- read_sf("/Users/wemigliari/Documents/R/data/para/amazonia_legal.shp")
+poten_econ_eixo_leste <- read_sf("/Users/wemigliari/Documents/R/data/para/poten_econo_eixo_leste.shp")
+poten_produt_eixo_oeste <- read_sf("/Users/wemigliari/Documents/R/data/para/poten_produt_eixo_oeste.shp")
+zoce <- read_sf("/Users/wemigliari/Documents/R/data/para/zona_oeste_conso_exp.shp")
+zlc <- read_sf("/Users/wemigliari/Documents/R/data/para/zona_leste_conso.shp")
+
+hidrovias <- read_sf("/Users/wemigliari/Documents/R/data/para/hidrovias_brasil.shp")
+hidrovias_b <- st_zm(hidrovias)
+
+portos <- read_sf("/Users/wemigliari/Documents/R/data/para/portos_brasil.shp")
+portos_b <- st_zm(portos)
+
+cabotagem <- read_sf("/Users/wemigliari/Documents/R/data/para/cabotagem_brasil.shp")
+cabotagem_b <- st_zm(cabotagem)
+
+dutovias <- read_sf("/Users/wemigliari/Documents/R/data/para/dutovias_brasil.shp")
+dutovias_b <- st_zm(dutovias) ### From polygon Z to ZM dimensions
+
+para <- brasil1%>%filter(NAME_1=="Pará")
+obidos <- brasil1%>%filter(NAME_2=="Óbidos")
+santarem <- brasil1%>%filter(NAME_2=="Santarém")
+alenquer <- brasil1%>%filter(NAME_2=="Alenquer")
+itaituba <- brasil1%>%filter(NAME_2=="Itaituba")
+belterra <- brasil1%>%filter(NAME_2=="Belterra")
+oriximina <- brasil1%>%filter(NAME_2=="Oriximiná")
+aveiro <- brasil1%>%filter(NAME_2=="Aveiro")
+
+
+
+serie_desmat <- read_excel("/Users/wemigliari/Documents/R/data/para/desmatamento_para.xlsx",
+                           sheet = "municipios")
+serie_desmat <- data.frame(serie_desmat, stringsAsFactors = FALSE)
+
+i <- c(2:12)   
+
+test <- serie_desmat[ , i] <- apply(serie_desmat[ , i], 2,            # Specify own function within apply
+                    function(x) as.numeric(as.character(x)))
+class(test)
+
+test1 <- as.data.frame(test)
+
+test_desmat <- cbind(serie_desmat$Localidade, test1)
+
+asc_desmat <- test_desmat[with(test_desmat, order(X2009)), ]
+
+baixo_desmat <- asc_desmat[1:10,]
+alto_desmat <- asc_desmat[134:143,]
+
+dez_munic <- test_desmat[c(6, 14, 58, 81, 83, 113),c(1:12)]
+asc_munic <- dez_munic[with(dez_munic, order(X2009)), ]
+
+
+```
+### Metadados & Georreferenciamento
+
+\
+
+Narrativas de Comunidades Indígenas, Quilombolas e Ribeirinhas da Região do Baixo Amazonas e Baixo Tapajós sobre Conflitos Territoriais: Desenvolvimento e Sustentabilidade Insustentável na Amazônia
+
+\
+\
+Pesquisador\
+Dr. Wellington Migliari\
+Institut de Recerca TransJus\
+Universitat de Barcelona\
+
+\
+Supervisor\
+Dr. Itamar Paulino\
+Programa de Pós-graduação 
+Sociedade, Ambiente e Qualidade de Vida\
+Universidade Federal do Oeste do Pará\
+
+\
+\
